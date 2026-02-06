@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="format-detection" content="telephone=no">
-    <title>基王阿之</title>
+    <meta name="theme-color" content="#000000">
+    <title>基王阿之·V5终极版</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -15,652 +15,680 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
 
     <style>
-        /* --- 基王阿之 OS 核心样式 --- */
-        :root {
-            --bg-deep: #000000;
-            --bg-card: #1c1c1e;
-            --text-primary: #ffffff;
-            --text-secondary: #8e8e93;
-            --up-color: #ff3b30;    /* 苹果红 */
-            --down-color: #30d158;  /* 苹果绿 */
-            --accent: #0a84ff;      /* 核心蓝 */
-            --glass: rgba(28, 28, 30, 0.75);
-        }
-
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-            -webkit-font-smoothing: antialiased;
-            overflow: hidden; /* 禁止整体滚动，使用局部滚动 */
-        }
-
-        /* 隐藏滚动条但保留功能 */
+        /* --- V5.0 视觉引擎 --- */
+        :root { --bg: #000000; --card: #111111; --border: #222222; --blue: #0A84FF; --red: #FF453A; --green: #30D158; }
+        body { background-color: var(--bg); color: #fff; font-family: -apple-system, "SF Pro Text", sans-serif; overflow: hidden; user-select: none; }
+        
+        /* 隐藏滚动条 */
         .scroller::-webkit-scrollbar { display: none; }
         .scroller { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 动态数字跳动特效 */
-        @keyframes flashRed { 0% { background-color: rgba(255, 59, 48, 0.3); } 100% { background-color: transparent; } }
-        @keyframes flashGreen { 0% { background-color: rgba(48, 209, 88, 0.3); } 100% { background-color: transparent; } }
-        .tick-up { animation: flashRed 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tick-down { animation: flashGreen 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* 价格跳动微效 */
+        .flash-red { animation: flashR 0.8s; }
+        .flash-green { animation: flashG 0.8s; }
+        @keyframes flashR { 0% { color: #fff; text-shadow: 0 0 10px var(--red); } 100% { color: var(--red); } }
+        @keyframes flashG { 0% { color: #fff; text-shadow: 0 0 10px var(--green); } 100% { color: var(--green); } }
 
-        /* 玻璃拟态 */
-        .glass-morphism {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
+        /* 标签切换 */
+        .tab-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-active { background: #333; color: white; font-weight: 600; }
+        .tab-inactive { color: #666; }
 
-        /* 底部导航激活条 */
-        .nav-item.active i { color: var(--accent); transform: scale(1.1); transition: all 0.2s; }
-        .nav-item.active span { color: var(--accent); font-weight: 600; }
+        /* 玻璃态组件 */
+        .glass-nav { background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); }
+        .glass-header { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
         
-        /* 阿之的头像光圈 */
-        .azhi-avatar {
-            box-shadow: 0 0 15px var(--accent);
-            animation: breathe 3s infinite;
-        }
-        @keyframes breathe { 0% { box-shadow: 0 0 5px var(--accent); } 50% { box-shadow: 0 0 20px var(--accent); } 100% { box-shadow: 0 0 5px var(--accent); } }
+        /* 状态呼吸灯 */
+        .live-dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 8px currentColor; animation: breathe 2s infinite; }
+        @keyframes breathe { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
     </style>
 </head>
-<body class="flex flex-col h-screen w-full">
+<body class="flex flex-col h-screen w-full text-sm">
 
-    <header class="h-12 flex items-center justify-between px-4 pt-safe z-50 bg-black/80 backdrop-blur-md sticky top-0">
+    <header class="h-12 flex items-center justify-between px-4 glass-header z-50 fixed top-0 w-full">
         <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse" id="connectionDot"></div>
-            <h1 class="font-bold text-lg tracking-wide">基王<span class="text-blue-500">阿之</span></h1>
+            <div id="statusDot" class="live-dot text-yellow-500"></div>
+            <h1 class="font-bold text-base tracking-wide">基王<span class="text-blue-500">阿之</span> <span class="text-[9px] border border-gray-700 px-1 rounded text-gray-500">V5.0</span></h1>
         </div>
-        <div class="text-xs font-mono text-gray-500" id="marketClock">00:00:00</div>
+        <div class="font-mono text-gray-500 text-xs" id="clock">00:00:00</div>
     </header>
 
-    <div class="h-8 bg-[#111] flex items-center px-4 overflow-hidden border-b border-gray-800">
-        <i class="fas fa-bolt text-yellow-500 text-xs mr-2"></i>
-        <div class="flex-1 overflow-hidden relative h-full">
-            <div id="tickerTape" class="absolute whitespace-nowrap text-xs text-gray-400 leading-8" style="left: 100%;">
-                阿之正在接入交易所底层数据...
+    <main class="flex-1 overflow-y-auto scroller pb-24 pt-12 bg-black" id="mainView">
+        
+        <div id="view-market" class="p-3 space-y-3 fade-in">
+            
+            <div class="bg-[#111] p-4 rounded-xl border border-[#222] relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-4 -top-4 text-[#1a1a1a] opacity-50"><i class="fas fa-chart-pie text-9xl"></i></div>
+                
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">今日预估盈亏 (CNY)</div>
+                            <div class="flex items-baseline gap-2">
+                                <span id="dayPnL" class="text-3xl font-bold font-mono tracking-tighter text-gray-200">0.00</span>
+                                <span id="dayPnLRate" class="text-xs font-bold px-1.5 py-0.5 rounded bg-[#222] text-gray-500">0.00%</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">总持有资产</div>
+                            <div id="totalAsset" class="text-xl font-mono font-bold text-gray-100">0.00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 border-t border-[#222] pt-3">
+                        <div>
+                            <div class="text-[10px] text-gray-600">累计总盈亏</div>
+                            <div id="totalPnL" class="font-mono text-gray-300">0.00</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-600">数据源状态</div>
+                            <div id="dataStatus" class="text-[10px] text-green-500 flex items-center justify-end gap-1">
+                                <i class="fas fa-satellite-dish"></i> 双模引擎正常
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2" id="indexGrid">
+                </div>
+
+            <div class="bg-[#111] rounded-xl border border-[#222] p-3">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-gray-300 flex items-center gap-1"><i class="fas fa-fire text-red-500"></i> 实时风口</span>
+                    <span class="text-[10px] text-gray-600">主力资金流向</span>
+                </div>
+                <div id="sectorList" class="space-y-2">
+                    <div class="text-center text-[10px] text-gray-700 py-2">全市场扫描中...</div>
+                </div>
+            </div>
+
+            <div class="bg-[#111] rounded-xl border border-[#222] h-64 flex flex-col">
+                <div class="flex justify-between items-center p-2 border-b border-[#222] bg-[#161616]">
+                    <span id="chartName" class="text-xs font-bold text-gray-300 ml-2">上证指数</span>
+                    <div class="flex gap-1 text-[10px]">
+                        <button onclick="App.loadKLine('1.000001', '上证')" class="px-2 py-1 bg-[#222] text-gray-400 rounded hover:text-white">A股</button>
+                        <button onclick="App.loadKLine('100.NDX', '纳指')" class="px-2 py-1 bg-[#222] text-gray-400 rounded hover:text-white">美股</button>
+                        <button onclick="App.loadKLine('1.BK0493', '半导体')" class="px-2 py-1 bg-[#222] text-gray-400 rounded hover:text-white">半导体</button>
+                    </div>
+                </div>
+                <div id="klineChart" class="flex-1 w-full"></div>
+            </div>
+        </div>
+
+        <div id="view-portfolio" class="p-3 space-y-3 hidden fade-in">
+            <div class="flex gap-2 sticky top-14 z-20">
+                <input id="quickAddCode" type="text" placeholder="输入代码 (如 001840, 600519)" class="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 text-sm text-white outline-none focus:border-blue-500 placeholder-gray-700">
+                <button onclick="App.openAddModal()" class="bg-blue-600 px-4 rounded-lg text-white font-bold text-xs shadow-lg shadow-blue-900/30 active:scale-95 transition-transform">
+                    <i class="fas fa-plus"></i> 添加
+                </button>
+            </div>
+
+            <div class="flex bg-[#111] p-1 rounded-lg border border-[#222]">
+                <button onclick="App.switchList('holding')" id="tab-holding" class="flex-1 py-1.5 text-xs rounded text-center tab-active">实盘持仓</button>
+                <button onclick="App.switchList('watching')" id="tab-watching" class="flex-1 py-1.5 text-xs rounded text-center tab-inactive">暗中观察</button>
+            </div>
+
+            <div id="assetList" class="space-y-2 pb-20 min-h-[300px]">
+                </div>
+        </div>
+
+        <div id="view-ai" class="flex flex-col h-full hidden p-3 pb-0 fade-in">
+            <div class="flex-1 bg-[#111] rounded-xl border border-[#222] flex flex-col overflow-hidden relative shadow-inner">
+                <div class="h-10 border-b border-[#222] flex justify-between items-center px-3 bg-[#161616]">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-xs font-bold text-gray-300">阿之 Agent</span>
+                    </div>
+                    <button onclick="AI.clear()" class="text-gray-500 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                </div>
+                
+                <div id="chatBox" class="flex-1 overflow-y-auto p-3 space-y-3 scroller">
+                    <div class="bg-[#222] p-3 rounded-r-xl rounded-bl-xl text-xs text-gray-300 max-w-[85%] border border-[#333]">
+                        我是阿之。你的资产监控中枢。<br>我已经分清了你的“股票股数”和“基金份额”，别再担心算错账了。
+                    </div>
+                </div>
+                
+                <div class="p-3 bg-black border-t border-[#222]">
+                    <div class="flex gap-2 mb-2">
+                        <button onclick="AI.analyze('holding')" class="flex-1 bg-blue-900/10 text-blue-500 py-2 rounded text-xs border border-blue-900/30 hover:bg-blue-900/20">📊 诊断持仓</button>
+                        <button onclick="AI.analyze('watching')" class="flex-1 bg-purple-900/10 text-purple-500 py-2 rounded text-xs border border-purple-900/30 hover:bg-purple-900/20">👀 机会分析</button>
+                    </div>
+                    <div class="relative">
+                        <input id="aiInput" class="w-full bg-[#161616] text-xs text-white p-3 pr-8 rounded-lg outline-none border border-[#333] focus:border-blue-500" placeholder="输入 Key 或 提问...">
+                        <button onclick="AI.send()" class="absolute right-2 top-2.5 text-blue-500 p-1"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="h-20"></div>
+        </div>
+
+        <div id="view-settings" class="p-4 hidden fade-in">
+            <div class="bg-[#111] rounded-xl p-4 border border-[#222] space-y-4">
+                <h3 class="text-sm font-bold text-gray-300 border-b border-[#222] pb-2">配置中心</h3>
+                <div>
+                    <label class="text-[10px] text-gray-500 uppercase">Google Gemini API Key</label>
+                    <input id="settingKey" type="password" class="w-full bg-black border border-[#333] rounded p-2 text-xs text-white mt-1 font-mono" placeholder="AIza...">
+                </div>
+                <button onclick="App.saveSettings()" class="w-full bg-blue-600 py-2.5 rounded text-xs font-bold text-white shadow-lg shadow-blue-900/30">保存生效</button>
+                <div class="text-[10px] text-gray-600 text-center pt-2">
+                    双模引擎: Push2 (Stock) + FundGZ (Fund)
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full h-16 glass-nav z-50 flex justify-around items-center pb-safe">
+        <div onclick="App.nav('market')" class="nav-btn active flex flex-col items-center w-1/4 opacity-100 transition-opacity">
+            <i class="fas fa-chart-line text-lg mb-1"></i><span class="text-[10px]">行情</span>
+        </div>
+        <div onclick="App.nav('portfolio')" class="nav-btn flex flex-col items-center w-1/4 opacity-50 transition-opacity">
+            <i class="fas fa-wallet text-lg mb-1"></i><span class="text-[10px]">资产</span>
+        </div>
+        <div onclick="App.nav('ai')" class="nav-btn flex flex-col items-center w-1/4 opacity-50 transition-opacity">
+            <div class="relative">
+                <i class="fas fa-robot text-lg mb-1"></i>
+            </div>
+            <span class="text-[10px]">阿之</span>
+        </div>
+        <div onclick="App.nav('settings')" class="nav-btn flex flex-col items-center w-1/4 opacity-50 transition-opacity">
+            <i class="fas fa-sliders-h text-lg mb-1"></i><span class="text-[10px]">设置</span>
+        </div>
+    </nav>
+
+    <div id="addModal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-[#181818] w-full max-w-xs rounded-xl p-5 border border-[#333] shadow-2xl">
+            <h3 class="text-sm font-bold text-white mb-4 flex justify-between">
+                <span>添加资产</span>
+                <span class="text-[10px] text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded" id="modalTypeTag">自动识别</span>
+            </h3>
+            
+            <div class="space-y-4">
+                <div class="flex bg-black p-1 rounded-lg">
+                    <button onclick="App.setAddMode('holding')" id="btn-add-hold" class="flex-1 py-1.5 text-xs rounded font-bold bg-[#333] text-white transition-all">实盘持仓</button>
+                    <button onclick="App.setAddMode('watching')" id="btn-add-watch" class="flex-1 py-1.5 text-xs rounded text-gray-500 transition-all">仅观望</button>
+                </div>
+                
+                <div>
+                    <label class="text-[10px] text-gray-500 block mb-1">资产代码</label>
+                    <input id="modalCode" disabled class="w-full bg-[#111] border border-[#333] rounded p-2 text-xs text-gray-300 font-mono">
+                </div>
+
+                <div id="holdInputs" class="space-y-3">
+                    <div>
+                        <label class="text-[10px] text-gray-500 block mb-1">持仓成本 (单价)</label>
+                        <input id="modalCost" type="number" class="w-full bg-black border border-[#333] rounded p-2 text-xs text-white focus:border-blue-500 outline-none" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-500 block mb-1" id="labelVol">持有数量 (股)</label> <input id="modalVol" type="number" class="w-full bg-black border border-[#333] rounded p-2 text-xs text-white focus:border-blue-500 outline-none" placeholder="0">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-2">
+                    <button onclick="document.getElementById('addModal').classList.add('hidden')" class="flex-1 py-2.5 rounded border border-[#333] text-xs text-gray-400 hover:bg-[#222]">取消</button>
+                    <button onclick="App.confirmAdd()" class="flex-1 py-2.5 rounded bg-blue-600 text-xs text-white font-bold shadow-lg shadow-blue-600/20">确认添加</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <main class="flex-1 overflow-y-auto scroller pb-24 relative" id="mainView">
-        
-        <div id="page-market" class="p-4 space-y-5 fade-in">
-            <div class="bg-gradient-to-br from-[#1c1c1e] to-[#2c2c2e] p-5 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-3 opacity-10"><i class="fas fa-chart-line text-6xl text-white"></i></div>
-                <div class="text-xs text-gray-400 mb-1">今日预估盈亏 (CNY)</div>
-                <div class="flex items-baseline gap-2 z-10 relative">
-                    <span id="dayPnL" class="text-4xl font-bold font-mono tracking-tighter transition-colors duration-500">0.00</span>
-                    <span id="dayPnLRate" class="text-sm font-medium px-2 py-0.5 rounded bg-white/10">0.00%</span>
-                </div>
-                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between text-xs text-gray-500 z-10 relative">
-                    <span>总资产: <span id="totalAsset" class="text-gray-200 font-mono">0</span></span>
-                    <span>累计盈亏: <span id="totalPnL" class="text-gray-200 font-mono">0</span></span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-3" id="indexGrid">
-                </div>
-
-            <div class="bg-[#1c1c1e] rounded-2xl p-4 border border-white/5 h-64 flex flex-col">
-                <div class="flex justify-between items-center mb-2">
-                    <div class="text-sm font-bold text-gray-300 flex items-center gap-2">
-                        <span id="chartName">上证指数</span>
-                        <span class="text-[10px] text-gray-500 bg-gray-800 px-1 rounded">日K</span>
-                    </div>
-                    <div class="flex gap-3 text-xs font-bold text-gray-500">
-                        <span onclick="App.loadChart('1.000001', '上证指数')" class="cursor-pointer hover:text-blue-500">A股</span>
-                        <span onclick="App.loadChart('100.NDX', '纳指')" class="cursor-pointer hover:text-blue-500">美股</span>
-                        <span onclick="App.loadChart('1.518880', '黄金')" class="cursor-pointer hover:text-yellow-500">黄金</span>
-                    </div>
-                </div>
-                <div id="kLine" class="flex-1 w-full"></div>
-            </div>
-        </div>
-
-        <div id="page-portfolio" class="p-4 space-y-4 hidden">
-            <div class="bg-[#1c1c1e] p-3 rounded-xl flex gap-2 items-center sticky top-0 z-20 shadow-lg border border-white/5">
-                <div class="flex-1 relative">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-500 text-xs"></i>
-                    <input type="text" id="inputCode" placeholder="代码 (如 000001)" class="w-full bg-black rounded-lg py-2 pl-8 pr-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-700">
-                </div>
-                <button onclick="App.addAsset()" class="bg-blue-600 hover:bg-blue-500 text-white w-9 h-9 rounded-lg flex items-center justify-center transition active:scale-95">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-
-            <div id="assetList" class="space-y-3 pb-20">
-                </div>
-        </div>
-
-        <div id="page-ai" class="flex flex-col h-full hidden p-4 pb-0">
-            <div class="flex-1 bg-[#1c1c1e] rounded-2xl border border-white/5 flex flex-col overflow-hidden relative">
-                <div class="h-12 border-b border-white/5 flex justify-between items-center px-4 bg-[#2c2c2e]">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] azhi-avatar">之</div>
-                        <span class="font-bold text-sm">阿之 Agent</span>
-                    </div>
-                    <button onclick="AI.clear()" class="text-gray-600 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
-                </div>
-                
-                <div id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 scroller">
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-600 shrink-0 flex items-center justify-center text-xs font-bold mt-1">之</div>
-                        <div class="bg-[#2c2c2e] p-3 rounded-r-xl rounded-bl-xl text-sm text-gray-300 leading-relaxed shadow-sm">
-                            我是阿之。你的全天候资产监控智能体。<br>我会根据每秒行情，狠狠地评判你的操作。准备好接受真相了吗？
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-3 bg-[#111] border-t border-white/5">
-                    <div class="flex gap-2 mb-2">
-                        <button onclick="AI.analyze('market')" class="flex-1 bg-gray-800 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-700">🌍 市场毒舌点评</button>
-                        <button onclick="AI.analyze('portfolio')" class="flex-1 bg-blue-900/30 text-blue-400 py-2 rounded-lg text-xs hover:bg-blue-900/50">📊 诊断我的持仓</button>
-                    </div>
-                    <div class="relative">
-                        <input type="text" id="aiInput" placeholder="问阿之点什么..." class="w-full bg-[#2c2c2e] text-sm text-white p-3 pr-10 rounded-xl focus:outline-none">
-                        <button onclick="AI.send()" class="absolute right-2 top-2 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white"><i class="fas fa-paper-plane text-xs"></i></button>
-                    </div>
-                </div>
-            </div>
-            <div class="h-24"></div>
-        </div>
-
-        <div id="page-settings" class="p-4 hidden">
-            <div class="bg-[#1c1c1e] rounded-2xl p-5 space-y-4 border border-white/5">
-                <h3 class="font-bold text-lg">系统核心配置</h3>
-                <div>
-                    <label class="text-xs text-gray-500 mb-1 block">Gemini API Key (阿之的大脑)</label>
-                    <input type="password" id="apiKey" class="w-full bg-black border border-gray-700 rounded-lg p-3 text-sm text-white" placeholder="粘贴 Key 这里...">
-                </div>
-                <button onclick="App.saveSettings()" class="w-full bg-green-600 py-3 rounded-xl font-bold text-sm">保存并激活阿之</button>
-                <p class="text-[10px] text-gray-600 text-center">数据仅存储在本地，绝不上传。</p>
-            </div>
-        </div>
-
-    </main>
-
-    <nav class="h-[80px] glass-morphism fixed bottom-0 w-full z-50 flex justify-around items-start pt-3 pb-safe">
-        <div onclick="App.nav('market')" class="nav-item active flex flex-col items-center w-1/5 cursor-pointer group">
-            <i class="fas fa-chart-line text-xl text-gray-500 mb-1 group-hover:text-white"></i>
-            <span class="text-[10px] text-gray-500 group-hover:text-white">行情</span>
-        </div>
-        <div onclick="App.nav('portfolio')" class="nav-item flex flex-col items-center w-1/5 cursor-pointer group">
-            <i class="fas fa-wallet text-xl text-gray-500 mb-1 group-hover:text-white"></i>
-            <span class="text-[10px] text-gray-500 group-hover:text-white">持仓</span>
-        </div>
-        <div onclick="App.nav('ai')" class="nav-item flex flex-col items-center w-1/5 cursor-pointer group relative">
-            <div class="absolute -top-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/50 border-4 border-black">
-                <i class="fas fa-robot text-white text-lg"></i>
-            </div>
-            <span class="text-[10px] text-gray-500 mt-7 group-hover:text-white">阿之</span>
-        </div>
-        <div onclick="App.nav('settings')" class="nav-item flex flex-col items-center w-1/5 cursor-pointer group">
-            <i class="fas fa-cog text-xl text-gray-500 mb-1 group-hover:text-white"></i>
-            <span class="text-[10px] text-gray-500 group-hover:text-white">设置</span>
-        </div>
-    </nav>
-
     <script>
-        // === 🔱 核心引擎：阿之 OS (AzhiOS) ===
-        const AzhiOS = {
-            version: "2.0.0 Ultimate",
-            refreshRate: 2000, // 2秒心跳，既极速又稳定
-            apiKey: localStorage.getItem('azhi_key') || '',
-            assets: JSON.parse(localStorage.getItem('azhi_assets') || '[]'),
-            cache: { stock: {}, fund: {}, market: {} },
-            timer: null,
-            
-            // 初始化
-            boot() {
-                this.startClock();
-                this.startTicker();
-                this.startHeartbeat();
-                UI.renderAssets(); // 初次渲染
-                UI.initChart();
-                if(this.assets.length === 0) {
-                    setTimeout(() => UI.showToast("欢迎使用基王阿之，请先添加资产", "info"), 1000);
-                }
-            },
-
-            // 心跳机制：数据流入口
-            async startHeartbeat() {
-                const beat = async () => {
-                    document.getElementById('connectionDot').className = "w-2 h-2 rounded-full bg-yellow-500"; // Fetching
-                    
-                    try {
-                        // 1. 并发抓取大盘和持仓
-                        // 技巧：把所有代码拼在一起请求，减少 TCP 连接开销
-                        const marketCodes = ["1.000001", "0.399006", "100.HSI", "100.NDX", "100.DJIA", "1.518880"];
-                        const stockCodes = this.assets.filter(a => a.type === 'stock').map(a => this.fixCode(a.code));
-                        const allSecIds = [...new Set([...marketCodes, ...stockCodes])].join(',');
-
-                        // 股票/ETF 实时流 (Level-1 Snapshots)
-                        if (allSecIds) {
-                            const url = `https://push2.eastmoney.com/api/qt/ulist/get?secids=${allSecIds}&fields=f2,f3,f4,f12,f14,f139`; // f139=上市板块
-                            const res = await this.jsonp(url);
-                            if (res?.data?.diff) {
-                                res.data.diff.forEach(d => {
-                                    this.cache.market[d.f12] = d; // 存入大盘缓存
-                                    if(this.isStock(d.f12)) this.cache.stock[d.f12] = d; // 存入个股缓存
-                                });
-                                UI.updateIndices(res.data.diff); // 更新大盘 UI
-                            }
-                        }
-
-                        // 2. 场外基金实时估值 (GSZ)
-                        // 技巧：使用 Promise.all 并发请求，不阻塞
-                        const funds = this.assets.filter(a => a.type === 'fund');
-                        const fundPromises = funds.map(f => {
-                            return new Promise(resolve => {
-                                const s = document.createElement('script');
-                                s.src = `https://fundgz.1234567.com.cn/js/${f.code}.js?rt=${Date.now()}`;
-                                window.jsonpgz = (data) => {
-                                    this.cache.fund[f.code] = data; // 存入基金缓存
-                                    document.body.removeChild(s);
-                                    resolve();
-                                };
-                                s.onerror = () => { document.body.removeChild(s); resolve(); }; // 失败忽略
-                                document.body.appendChild(s);
-                            });
-                        });
-                        await Promise.all(fundPromises);
-
-                        // 3. 计算与 UI 刷新
-                        Calculator.recalc();
-                        document.getElementById('connectionDot').className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#30d158]"; // Healthy
-                    } catch (e) {
-                        console.error("Heartbeat missed:", e);
-                        document.getElementById('connectionDot').className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
-                    }
-                };
-
-                beat();
-                setInterval(beat, this.refreshRate);
-            },
-
-            // 工具：JSONP 封装
-            jsonp(url) {
-                return new Promise((resolve) => {
-                    const cb = 'cb_' + Math.random().toString(36).substr(2, 9);
+        // === 🥷 忍者数据引擎 V5 (双模混合) ===
+        const Ninja = {
+            // 引擎 A: 股票/ETF/大盘 (Eastmoney Push2)
+            fetchStock(url) {
+                return new Promise((resolve, reject) => {
+                    const cb = `cb_stock_${Math.random().toString(36).substr(2, 6)}`;
                     const s = document.createElement('script');
-                    s.src = `${url}&callback=${cb}`;
-                    window[cb] = (d) => { delete window[cb]; document.body.removeChild(s); resolve(d); };
-                    s.onerror = () => { delete window[cb]; document.body.removeChild(s); resolve(null); };
+                    s.referrerPolicy = 'no-referrer'; 
+                    s.src = `${url}${url.includes('?')?'&':'?'}callback=${cb}`;
+                    const t = setTimeout(() => { cleanup(); reject('timeout'); }, 3000);
+                    window[cb] = (res) => { cleanup(); resolve(res); };
+                    function cleanup() { clearTimeout(t); if(s.parentNode) s.parentNode.removeChild(s); delete window[cb]; }
+                    s.onerror = () => { cleanup(); reject('error'); };
                     document.body.appendChild(s);
                 });
             },
 
-            // 工具：代码补全
-            fixCode(code) {
+            // 引擎 B: 场外基金 (FundGZ HTTPS)
+            // 解决 "基金没有股数" 和 "净值更新慢" 的问题，直接抓取盘中估值
+            fetchFund(code) {
+                return new Promise((resolve) => {
+                    const cb = `jsonpgz`; // 固定回调名
+                    const s = document.createElement('script');
+                    // 使用 HTTPS 接口防止被 Block
+                    s.src = `https://fundgz.1234567.com.cn/js/${code}.js?rt=${Date.now()}`;
+                    
+                    // 拦截全局 jsonpgz 回调
+                    const originalCb = window.jsonpgz;
+                    window.jsonpgz = (data) => {
+                        resolve(data); // 成功拿到估值
+                        if(originalCb) window.jsonpgz = originalCb; // 恢复
+                        if(s.parentNode) s.parentNode.removeChild(s);
+                    };
+                    
+                    s.onerror = () => { 
+                        if(s.parentNode) s.parentNode.removeChild(s); 
+                        resolve(null); // 失败返回空
+                    };
+                    document.body.appendChild(s);
+                });
+            },
+
+            // 智能识别类型
+            identify(code) {
+                code = code.toString();
+                // 简单规则：6位数字，以 00, 01, 20 等开头通常是场外基金，除非是 00xxxx 深市股票
+                // 更加鲁棒的判断：用户输入时选择，或者默认尝试两种引擎
+                // 这里采用 "优先场外基金引擎" 策略给 6位纯数字且不以 6/3/9 开头的
+                if(/^\d{6}$/.test(code)) {
+                    if(code.startsWith('00') || code.startsWith('01') || code.startsWith('2') || code.startsWith('16')) {
+                        // 16开头是LOF，既可以场内也可以场外。V5版默认走场内(Stock)引擎因为实时性更强，
+                        // 但如果是纯粹的场外基（如001840），走Fund引擎。
+                        // 策略：所有6位数字先尝试归一化为Stock，如果Stock没数据，或是特定号段，标记为Fund
+                        if(code.startsWith('00') || code.startsWith('01')) return 'fund';
+                    }
+                }
+                return 'stock';
+            },
+
+            // 股票代码标准化
+            normalizeStock(code) {
+                code = code.toUpperCase();
                 if(code.includes('.')) return code;
-                if(/^(6|5|9)/.test(code)) return `1.${code}`; // 上海
-                if(/^(0|3|1)/.test(code)) return `0.${code}`; // 深圳
-                return `1.${code}`; // 默认
-            },
-
-            isStock(code) {
-                // 简单判断是否在持仓列表里
-                return this.assets.some(a => a.code === code && a.type === 'stock');
-            },
-
-            // 内部时钟
-            startClock() {
-                setInterval(() => {
-                    document.getElementById('marketClock').innerText = dayjs().format('HH:mm:ss');
-                }, 1000);
-            },
-
-            // 新闻滚动条
-            startTicker() {
-                const msgs = [
-                    "阿之正在监控全市场...",
-                    "A股实盘交易中...",
-                    "北向资金流向监控启动...",
-                    "美股期货实时数据接入...",
-                    "智能风控模块运行正常"
-                ];
-                let i = 0;
-                const el = document.getElementById('tickerTape');
-                const run = () => {
-                    el.style.transition = 'none';
-                    el.style.left = '100%';
-                    el.innerText = msgs[i++ % msgs.length];
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            el.style.transition = 'left 12s linear';
-                            el.style.left = '-100%';
-                        }, 50);
-                    });
-                };
-                run();
-                setInterval(run, 12500);
+                if(code.startsWith('BK')) return `90.${code}`; 
+                if(/^\d{5}$/.test(code)) return `116.${code}`; // 港股
+                if(/^[A-Z]+$/.test(code)) return `100.${code}`; // 美股
+                if(/^(6|9|5|8)/.test(code)) return `1.${code}`; // 沪市
+                return `0.${code}`; // 深市
             }
         };
 
-        // === 🧮 算力引擎 (Calculator) ===
-        const Calculator = {
-            recalc() {
-                let dayTotal = 0;
-                let dayBase = 0; // 用于计算涨幅
+        // === 📱 全局控制器 V5 ===
+        const App = {
+            assets: JSON.parse(localStorage.getItem('azhi_assets_v5') || '[]'),
+            cache: {}, // 股票缓存
+            fundCache: {}, // 基金缓存
+            currentList: 'holding',
+            addModeTemp: 'holding',
+            addTypeTemp: 'stock', // stock | fund
+
+            init() {
+                this.startTime();
+                this.initChart();
+                this.loop();
+                this.renderList();
+                // 恢复 Key
+                if(localStorage.getItem('azhi_key')) document.getElementById('settingKey').value = localStorage.getItem('azhi_key');
+            },
+
+            // --- 核心双循环 ---
+            async loop() {
+                const beat = async () => {
+                    document.getElementById('statusDot').className = "live-dot text-yellow-500";
+                    
+                    try {
+                        // 1. 分离资产类型
+                        const stockCodes = ["1.000001", "0.399006", "100.NDX", "1.BK0493"]; // 预设指数
+                        const fundCodes = [];
+
+                        this.assets.forEach(a => {
+                            if(a.type === 'fund') fundCodes.push(a.code);
+                            else stockCodes.push(Ninja.normalizeStock(a.code));
+                        });
+
+                        // 2. 并行请求
+                        const promises = [];
+
+                        // 任务A: 股票引擎
+                        if(stockCodes.length > 0) {
+                            const url = `https://push2.eastmoney.com/api/qt/ulist/get?secids=${[...new Set(stockCodes)].join(',')}&fields=f2,f3,f4,f12,f14,f62`;
+                            promises.push(Ninja.fetchStock(url).then(res => {
+                                if(res?.data?.diff) res.data.diff.forEach(d => this.cache[d.f12] = d);
+                            }));
+                        }
+
+                        // 任务B: 基金引擎 (每个基金单独发请求，Promise.all)
+                        fundCodes.forEach(code => {
+                            promises.push(Ninja.fetchFund(code).then(res => {
+                                if(res) this.fundCache[code] = res;
+                            }));
+                        });
+
+                        await Promise.all(promises);
+
+                        // 3. 计算与渲染
+                        this.calc();
+                        this.renderMarket();
+                        this.renderListRow();
+                        this.fetchSectors();
+                        
+                        document.getElementById('statusDot').className = "live-dot text-green-500 shadow-[0_0_8px_#30d158]";
+                        document.getElementById('dataStatus').innerHTML = '<i class="fas fa-check-circle"></i> V5双模引擎运转中';
+                    } catch(e) {
+                        console.error(e);
+                        document.getElementById('statusDot').className = "live-dot text-red-500";
+                    }
+                };
+                beat();
+                setInterval(beat, 2500); // 2.5秒刷新
+            },
+
+            // --- 精确计算 (区分股数/份额) ---
+            calc() {
+                let dayPnL = 0;
                 let totalAsset = 0;
                 let totalCost = 0;
 
-                AzhiOS.assets.forEach((item, idx) => {
-                    let price = 0, rate = 0, name = item.code;
-                    let isFund = item.type === 'fund';
-                    let hasData = false;
+                this.assets.forEach(a => {
+                    if(a.mode !== 'holding') return;
 
-                    if (isFund) {
-                        const d = AzhiOS.cache.fund[item.code];
-                        if (d) {
-                            price = parseFloat(d.gsz);
-                            rate = parseFloat(d.gszzl);
-                            name = d.name;
-                            hasData = true;
+                    let price = 0;
+                    let change = 0; // 涨跌额
+                    let changeRate = 0;
+
+                    if(a.type === 'fund') {
+                        const d = this.fundCache[a.code];
+                        if(d) {
+                            price = parseFloat(d.gsz); // 实时估值
+                            // 基金没有直接的"涨跌额"，需计算: 昨收 * 涨幅% (近似)
+                            // 或者: 估值 - 昨净值
+                            const lastNav = parseFloat(d.dwjz); // 昨净值
+                            change = price - lastNav;
                         }
                     } else {
-                        const d = AzhiOS.cache.stock[item.code]; // 注意这里key是code不是带前缀的
-                        if (d) {
+                        const d = this.cache[a.code];
+                        if(d) {
                             price = d.f2;
-                            rate = d.f3;
-                            name = d.f14;
-                            hasData = true;
+                            change = d.f4; // 交易所精确涨跌额
                         }
                     }
 
-                    if (hasData) {
-                        // 更新 DOM (局部更新，性能优化)
-                        UI.updateAssetRow(idx, name, price, rate);
-                        
-                        const val = price * item.vol;
-                        const cost = item.cost * item.vol;
-                        
-                        // 估算当日盈亏
-                        // 股票：(现价 - 昨收) * 股数 = 现价 * 股数 * (涨幅/100 / (1+涨幅/100)) --- 简化为：市值 * 涨幅% 
-                        // 更精确：市值 - (市值 / (1 + rate/100))
-                        const dayPnL = val - (val / (1 + rate / 100));
-                        
-                        dayTotal += dayPnL;
-                        totalAsset += val;
-                        totalCost += cost;
+                    if(price > 0) {
+                        dayPnL += change * a.vol;
+                        totalAsset += price * a.vol;
+                        totalCost += a.cost * a.vol;
                     }
                 });
 
-                // 更新总览面板
+                // UI 更新
                 const pnlEl = document.getElementById('dayPnL');
-                const oldVal = parseFloat(pnlEl.innerText);
-                const newVal = dayTotal;
+                pnlEl.innerText = (dayPnL>0?'+':'') + dayPnL.toFixed(2);
+                pnlEl.className = `text-3xl font-bold font-mono tracking-tighter ${dayPnL>=0?'text-red-500':'text-green-500'}`;
                 
-                pnlEl.innerText = (newVal > 0 ? '+' : '') + newVal.toFixed(2);
-                pnlEl.className = `text-4xl font-bold font-mono tracking-tighter ${newVal >= 0 ? 'text-[#ff3b30]' : 'text-[#30d158]'} ${newVal !== oldVal ? (newVal > oldVal ? 'tick-up' : 'tick-down') : ''}`;
-
-                const totalRate = totalCost > 0 ? (dayTotal / totalCost * 100).toFixed(2) : "0.00";
-                const rateEl = document.getElementById('dayPnLRate');
-                rateEl.innerText = (totalRate > 0 ? '+' : '') + totalRate + '%';
-                rateEl.className = `text-sm font-medium px-2 py-0.5 rounded ${newVal >= 0 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`;
+                const rate = totalCost > 0 ? (dayPnL / totalCost * 100).toFixed(2) : "0.00";
+                document.getElementById('dayPnLRate').innerText = (rate>0?'+':'') + rate + '%';
+                document.getElementById('dayPnLRate').className = `text-xs font-bold px-1.5 py-0.5 rounded ${dayPnL>=0?'bg-red-900/30 text-red-400':'bg-green-900/30 text-green-400'}`;
 
                 document.getElementById('totalAsset').innerText = Math.round(totalAsset).toLocaleString();
+                
                 const allPnL = totalAsset - totalCost;
-                document.getElementById('totalPnL').innerText = (allPnL > 0 ? '+' : '') + allPnL.toFixed(2);
-                document.getElementById('totalPnL').className = `font-mono ${allPnL >= 0 ? 'text-red-500' : 'text-green-500'}`;
-            }
-        };
-
-        // === 🎨 视觉引擎 (UI) ===
-        const UI = {
-            chart: null,
-            
-            // 渲染资产列表框架 (只运行一次)
-            renderAssets() {
-                const container = document.getElementById('assetList');
-                container.innerHTML = '';
-                AzhiOS.assets.forEach((item, idx) => {
-                    const div = document.createElement('div');
-                    div.className = "bg-[#1c1c1e] p-4 rounded-xl flex justify-between items-center border border-white/5 relative overflow-hidden group";
-                    div.id = `asset-row-${idx}`;
-                    div.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div class="w-1 h-8 rounded-full ${item.type==='stock'?'bg-blue-500':'bg-purple-500'}"></div>
-                            <div>
-                                <div class="font-bold text-sm text-gray-200 asset-name">加载中...</div>
-                                <div class="text-[10px] text-gray-500 font-mono">${item.code} | ${item.vol}股</div>
-                            </div>
-                        </div>
-                        <div class="text-right z-10">
-                            <div class="text-base font-bold font-mono text-gray-200 asset-price">--</div>
-                            <div class="text-xs font-medium asset-rate">--%</div>
-                        </div>
-                        <button onclick="App.delAsset(${idx})" class="absolute right-0 top-0 h-full w-16 bg-red-600 text-white flex items-center justify-center translate-x-full group-hover:translate-x-0 transition-transform duration-200"><i class="fas fa-trash"></i></button>
-                    `;
-                    container.appendChild(div);
-                });
+                document.getElementById('totalPnL').innerText = (allPnL>0?'+':'') + allPnL.toFixed(2);
+                document.getElementById('totalPnL').className = `font-mono ${allPnL>=0?'text-red-500':'text-green-500'}`;
             },
 
-            // 局部更新资产数据 (高频)
-            updateAssetRow(idx, name, price, rate) {
-                const row = document.getElementById(`asset-row-${idx}`);
-                if (!row) return;
-
-                row.querySelector('.asset-name').innerText = name;
+            // --- 列表渲染 (智能话术：股 vs 份额) ---
+            renderList() {
+                const list = document.getElementById('assetList');
+                list.innerHTML = '';
+                const items = this.assets.filter(a => a.mode === this.currentList);
                 
-                const priceEl = row.querySelector('.asset-price');
-                const rateEl = row.querySelector('.asset-rate');
-
-                // 价格闪烁逻辑
-                const oldPrice = parseFloat(priceEl.innerText);
-                if (price !== oldPrice && !isNaN(oldPrice)) {
-                    priceEl.parentElement.className = `text-right z-10 px-2 rounded transition-colors ${price > oldPrice ? 'tick-up' : 'tick-down'}`;
-                    setTimeout(() => priceEl.parentElement.className = 'text-right z-10 px-2', 800);
-                }
-
-                priceEl.innerText = price.toFixed(3); // 基金保留3位，股票通常2位，统一3位更精准
-                priceEl.className = `text-base font-bold font-mono ${rate >= 0 ? 'text-[#ff3b30]' : 'text-[#30d158]'}`;
-                
-                rateEl.innerText = (rate > 0 ? '+' : '') + rate + '%';
-                rateEl.className = `text-xs font-medium ${rate >= 0 ? 'text-[#ff3b30]' : 'text-[#30d158]'}`;
-            },
-
-            // 更新指数
-            updateIndices(data) {
-                const container = document.getElementById('indexGrid');
-                container.innerHTML = '';
-                // 过滤特定指数
-                const targets = ["上证指数", "创业板指", "恒生指数", "纳斯达克", "黄金ETF"];
-                data.forEach(d => {
-                    let name = d.f14;
-                    if(d.f12 === '518880') name = '黄金ETF'; // 特殊处理
-                    if(!targets.some(t => name.includes(t) || d.f12 === '100.NDX')) return;
-
-                    const rate = d.f3;
-                    const color = rate >= 0 ? 'text-[#ff3b30]' : 'text-[#30d158]';
-                    
-                    container.innerHTML += `
-                        <div class="bg-[#1c1c1e] p-2 rounded-lg text-center border border-white/5">
-                            <div class="text-[10px] text-gray-500 truncate">${name}</div>
-                            <div class="text-sm font-bold ${color} font-mono mt-1">${d.f2}</div>
-                            <div class="text-[10px] ${color}">${rate > 0 ? '+' : ''}${rate}%</div>
-                        </div>
-                    `;
-                });
-            },
-
-            initChart() {
-                this.chart = echarts.init(document.getElementById('kLine'));
-                App.loadChart('1.000001', '上证指数');
-            },
-
-            showToast(msg, type='info') {
-                // 简单 Toast 实现
-                const div = document.createElement('div');
-                div.className = "fixed top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-full text-xs shadow-lg z-50 fade-in";
-                div.innerText = msg;
-                document.body.appendChild(div);
-                setTimeout(() => document.body.removeChild(div), 3000);
-            }
-        };
-
-        // === 🧠 阿之 AI Agent ===
-        const AI = {
-            async analyze(type) {
-                if(!AzhiOS.apiKey) {
-                    App.nav('settings');
-                    UI.showToast("请先配置 API Key 唤醒阿之", "error");
+                if(items.length === 0) {
+                    list.innerHTML = `<div class="text-center text-gray-700 text-xs py-10">暂无资产</div>`;
                     return;
                 }
-                
-                // 构造毒舌 Prompt
-                const portfolioStr = AzhiOS.assets.map((a, i) => {
-                    const row = document.getElementById(`asset-row-${i}`);
-                    const name = row ? row.querySelector('.asset-name').innerText : a.code;
-                    const rate = row ? row.querySelector('.asset-rate').innerText : '0%';
-                    return `${name}(${a.code}): 仓位${a.vol}, 成本${a.cost}, 今日${rate}`;
-                }).join('\n');
 
-                const marketStr = JSON.stringify(AzhiOS.cache.market);
-                const sysPrompt = `你现在是“阿之”，一个华尔街顶级的量化交易员，性格毒舌、犀利、极其自信，看不起散户的低级操作。你说话简短有力，喜欢用反问句。请根据以下数据点评用户。
-                用户数据：${portfolioStr}
-                市场概况：${marketStr}
-                如果是市场点评，分析趋势并预警。如果是持仓诊断，请无情地指出哪个垃圾标的在拖后腿，或者表扬哪个操作还凑合。`;
-
-                const userMsg = type === 'market' ? "阿之，看看现在的市场怎么了？" : "阿之，评价一下我的持仓，别留情面。";
-                this.appendMsg("user", userMsg);
-                this.appendMsg("azhi", "...", true); // Loading
-
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${AzhiOS.apiKey}`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt + "\n用户问：" + userMsg }] }] })
-                    });
-                    const json = await res.json();
-                    const text = json.candidates[0].content.parts[0].text;
-                    this.removeLoading();
-                    this.appendMsg("azhi", text);
-                } catch(e) {
-                    this.removeLoading();
-                    this.appendMsg("azhi", "网络波动，脑子卡壳了。检查你的 Key 或者网络。");
-                }
-            },
-
-            async send() {
-                const input = document.getElementById('aiInput');
-                const val = input.value.trim();
-                if(!val) return;
-                this.appendMsg("user", val);
-                input.value = '';
-                // 简单复用逻辑，实际应维护上下文
-                this.analyze('portfolio'); 
-            },
-
-            appendMsg(role, text, isLoading=false) {
-                const box = document.getElementById('chatContainer');
-                const div = document.createElement('div');
-                div.className = `flex gap-3 ${role==='user'?'flex-row-reverse':''} fade-in`;
-                if(isLoading) div.id = "ai-loading";
-                
-                const avatar = role === 'azhi' 
-                    ? `<div class="w-8 h-8 rounded-full bg-blue-600 shrink-0 flex items-center justify-center text-xs font-bold mt-1 shadow-lg shadow-blue-500/50">之</div>`
-                    : `<div class="w-8 h-8 rounded-full bg-gray-600 shrink-0 flex items-center justify-center text-xs mt-1"><i class="fas fa-user"></i></div>`;
-                
-                const bubble = role === 'azhi'
-                    ? `bg-[#2c2c2e] text-gray-200 rounded-r-xl rounded-bl-xl`
-                    : `bg-blue-600 text-white rounded-l-xl rounded-br-xl`;
-
-                div.innerHTML = `
-                    ${avatar}
-                    <div class="${bubble} p-3 text-sm leading-relaxed max-w-[80%] shadow-sm markdown-body">${isLoading ? '<i class="fas fa-circle-notch fa-spin"></i> 思考中...' : marked.parse(text)}</div>
-                `;
-                box.appendChild(div);
-                box.scrollTop = box.scrollHeight;
-            },
-
-            removeLoading() {
-                const el = document.getElementById('ai-loading');
-                if(el) el.remove();
-            },
-
-            clear() {
-                document.getElementById('chatContainer').innerHTML = '';
-                this.appendMsg("azhi", "记忆已清除。下一把好好操作。");
-            }
-        };
-
-        // === 📱 App 控制器 ===
-        const App = {
-            nav(page) {
-                document.querySelectorAll('main > div').forEach(el => el.classList.add('hidden'));
-                document.getElementById(`page-${page}`).classList.remove('hidden');
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                event.currentTarget.classList.add('active');
-            },
-
-            async loadChart(secid, name) {
-                document.getElementById('chartName').innerText = name;
-                UI.chart.showLoading({ color: '#0a84ff', maskColor: 'rgba(28,28,30,0.8)', textColor: '#fff' });
-                try {
-                    const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1&fields2=f51,f52,f53,f54,f55&klt=101&fqt=1&end=20500101&lmt=60`;
-                    const res = await AzhiOS.jsonp(url);
-                    const kdata = res.data.klines.map(i => i.split(','));
-                    const option = {
-                        backgroundColor: 'transparent',
-                        grid: { top: 10, bottom: 20, left: 0, right: 0 },
-                        xAxis: { data: kdata.map(i=>i[0]), axisLine: {show:false}, axisTick: {show:false}, axisLabel: {show:false} },
-                        yAxis: { show: false, scale: true },
-                        series: [{
-                            type: 'candlestick',
-                            data: kdata.map(i=>[+i[1], +i[2], +i[3], +i[4]]),
-                            itemStyle: { color: '#ff3b30', color0: '#30d158', borderColor: '#ff3b30', borderColor0: '#30d158' }
-                        }]
-                    };
-                    UI.chart.setOption(option);
-                } catch(e) {}
-                UI.chart.hideLoading();
-            },
-
-            addAsset() {
-                const code = document.getElementById('inputCode').value.trim();
-                const cost = prompt("输入持仓成本价:", "0");
-                const vol = prompt("输入持仓股数:", "100");
-                
-                if(code && cost && vol) {
-                    const type = (code.length === 6 && (code.startsWith('00') || code.startsWith('16'))) ? 'fund' : 'stock'; // 简单判断，可优化
-                    // 默认都先按stock处理，如果是基金代码后续逻辑会尝试fundgz
-                    const finalType = confirm(`代码 ${code} 是场外基金吗？\n确定=基金，取消=股票/ETF`) ? 'fund' : 'stock';
+                items.forEach((a, idx) => {
+                    const realIdx = this.assets.indexOf(a);
+                    const isFund = a.type === 'fund';
+                    const unitLabel = isFund ? '份额' : '股';
                     
-                    AzhiOS.assets.push({ code, cost: parseFloat(cost), vol: parseFloat(vol), type: finalType });
-                    localStorage.setItem('azhi_assets', JSON.stringify(AzhiOS.assets));
-                    UI.renderAssets();
-                    AzhiOS.startHeartbeat(); // 立即刷新
-                    document.getElementById('inputCode').value = '';
-                    UI.showToast("资产已添加", "success");
+                    list.innerHTML += `
+                        <div class="bg-[#111] p-3 rounded-lg border border-[#222] flex justify-between items-center group relative overflow-hidden">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] px-1 rounded ${isFund?'bg-orange-900/30 text-orange-400':'bg-blue-900/30 text-blue-400'}">${isFund?'基金':'股票'}</span>
+                                    <span class="font-bold text-sm text-gray-200" id="name_${a.code}">${a.code}</span>
+                                </div>
+                                <div class="text-[10px] text-gray-500 mt-1">
+                                    ${this.currentList==='holding' ? `持 ${a.vol}${unitLabel} @ ${a.cost}` : '暗中观察'}
+                                </div>
+                            </div>
+                            <div class="text-right z-10" id="val_${a.code}">
+                                <div class="text-xs text-gray-500">Loading...</div>
+                            </div>
+                            <button onclick="App.delAsset(${realIdx})" class="absolute right-0 top-0 bottom-0 w-12 bg-red-900/80 text-white flex items-center justify-center translate-x-full group-hover:translate-x-0 transition-transform">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            },
+
+            renderListRow() {
+                this.assets.forEach(a => {
+                    if(a.mode !== this.currentList) return;
+                    
+                    let name = '--';
+                    let price = 0;
+                    let rate = 0;
+                    let estTime = '';
+
+                    if(a.type === 'fund') {
+                        const d = this.fundCache[a.code];
+                        if(d) {
+                            name = d.name;
+                            price = d.gsz; // 估值
+                            rate = d.gszzl; // 估值涨跌
+                            estTime = d.gztime.split(' ')[1]; // 估值时间
+                        }
+                    } else {
+                        const d = this.cache[a.code];
+                        if(d) {
+                            name = d.f14;
+                            price = d.f2;
+                            rate = d.f3;
+                        }
+                    }
+
+                    if(price !== 0) {
+                        const nameEl = document.getElementById(`name_${a.code}`);
+                        if(nameEl) nameEl.innerText = name;
+                        
+                        const valEl = document.getElementById(`val_${a.code}`);
+                        if(valEl) {
+                            const color = rate >= 0 ? 'text-red-500' : 'text-green-500';
+                            valEl.innerHTML = `
+                                <div class="font-bold font-mono ${color}">${price}</div>
+                                <div class="text-[10px] ${color}">${rate>0?'+':''}${rate}% ${estTime ? `<span class="text-gray-600 ml-1 scale-75 origin-right inline-block">${estTime}</span>` : ''}</div>
+                            `;
+                        }
+                    }
+                });
+            },
+
+            // --- 添加资产逻辑 (关键修复：股数 vs 份额) ---
+            openAddModal() {
+                const input = document.getElementById('quickAddCode');
+                const code = input.value.trim();
+                if(!code) return alert("请输入代码");
+                
+                // 自动识别类型
+                const type = Ninja.identify(code);
+                this.addTypeTemp = type;
+                
+                document.getElementById('modalCode').value = code;
+                document.getElementById('modalTypeTag').innerText = type === 'fund' ? '场外基金' : '股票/ETF';
+                document.getElementById('modalTypeTag').className = type === 'fund' ? 'text-[10px] text-orange-400 bg-orange-900/20 px-2 py-0.5 rounded' : 'text-[10px] text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded';
+                
+                // 动态修改 Label
+                document.getElementById('labelVol').innerText = type === 'fund' ? '持有份额 (份)' : '持有数量 (股)';
+                
+                document.getElementById('addModal').classList.remove('hidden');
+                input.value = '';
+                this.setAddMode('holding');
+            },
+
+            setAddMode(mode) {
+                this.addModeTemp = mode;
+                const btnHold = document.getElementById('btn-add-hold');
+                const btnWatch = document.getElementById('btn-add-watch');
+                const inputs = document.getElementById('holdInputs');
+                
+                if(mode === 'holding') {
+                    btnHold.className = "flex-1 py-1.5 text-xs rounded font-bold bg-[#333] text-white transition-all";
+                    btnWatch.className = "flex-1 py-1.5 text-xs rounded text-gray-500 transition-all";
+                    inputs.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    btnHold.className = "flex-1 py-1.5 text-xs rounded text-gray-500 transition-all";
+                    btnWatch.className = "flex-1 py-1.5 text-xs rounded font-bold bg-[#333] text-white transition-all";
+                    inputs.classList.add('opacity-50', 'pointer-events-none');
                 }
+            },
+
+            confirmAdd() {
+                const code = document.getElementById('modalCode').value;
+                const cost = parseFloat(document.getElementById('modalCost').value) || 0;
+                const vol = parseFloat(document.getElementById('modalVol').value) || 0;
+                
+                this.assets.push({
+                    code, 
+                    cost, 
+                    vol, 
+                    mode: this.addModeTemp,
+                    type: this.addTypeTemp
+                });
+                
+                localStorage.setItem('azhi_assets_v5', JSON.stringify(this.assets));
+                document.getElementById('addModal').classList.add('hidden');
+                
+                if(this.currentList !== this.addModeTemp) this.switchList(this.addModeTemp);
+                else this.renderList();
+                this.loop();
+            },
+
+            // --- 辅助功能 ---
+            fetchSectors() {
+                Ninja.fetchStock(`https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=6&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=m:90+t:2+f:!50&fields=f12,f14,f3,f62`).then(res => {
+                    if(res?.data?.diff) {
+                        const list = document.getElementById('sectorList');
+                        list.innerHTML = '';
+                        res.data.diff.forEach(s => {
+                            const flow = (s.f62/1e8).toFixed(1);
+                            list.innerHTML += `<div class="flex justify-between text-[10px] border-b border-[#222] pb-1 last:border-0"><span class="text-gray-400">${s.f14}</span><span class="text-red-500">+${s.f3}%</span><span class="${flow>0?'text-red-500':'text-green-500'}">${flow}亿</span></div>`;
+                        });
+                    }
+                });
+            },
+            
+            renderMarket() {
+                const idxs = ['1.000001','0.399006','100.NDX','1.BK0493'];
+                const grid = document.getElementById('indexGrid');
+                grid.innerHTML = '';
+                idxs.forEach(c => {
+                    const d = this.cache[Ninja.normalizeStock(c)] || this.cache[c.split('.')[1]];
+                    if(d) {
+                        grid.innerHTML += `<div class="bg-[#111] p-2 rounded border border-[#222] text-center"><div class="text-[10px] text-gray-500">${d.f14}</div><div class="font-bold text-gray-200 text-xs">${d.f2}</div><div class="text-[9px] ${d.f3>=0?'text-red-500':'text-green-500'}">${d.f3}%</div></div>`;
+                    }
+                });
+            },
+
+            switchList(mode) {
+                this.currentList = mode;
+                document.getElementById('tab-holding').className = mode === 'holding' ? 'flex-1 py-1.5 text-xs rounded text-center tab-active' : 'flex-1 py-1.5 text-xs rounded text-center tab-inactive';
+                document.getElementById('tab-watching').className = mode === 'watching' ? 'flex-1 py-1.5 text-xs rounded text-center tab-active' : 'flex-1 py-1.5 text-xs rounded text-center tab-inactive';
+                this.renderList();
+                this.renderListRow();
             },
 
             delAsset(idx) {
-                if(confirm("阿之：确定要割肉吗？")) {
-                    AzhiOS.assets.splice(idx, 1);
-                    localStorage.setItem('azhi_assets', JSON.stringify(AzhiOS.assets));
-                    UI.renderAssets();
+                if(confirm("确定删除?")) {
+                    this.assets.splice(idx, 1);
+                    localStorage.setItem('azhi_assets_v5', JSON.stringify(this.assets));
+                    this.renderList();
                 }
             },
 
+            nav(page) {
+                document.querySelectorAll('main > div').forEach(e => e.classList.add('hidden', 'fade-in'));
+                document.getElementById(`view-${page}`).classList.remove('hidden');
+                document.querySelectorAll('.nav-btn').forEach(e => { e.classList.remove('active'); e.classList.add('opacity-50'); });
+                event.currentTarget.classList.add('active');
+                event.currentTarget.classList.remove('opacity-50');
+            },
+
             saveSettings() {
-                const k = document.getElementById('apiKey').value.trim();
-                if(k) {
-                    localStorage.setItem('azhi_key', k);
-                    AzhiOS.apiKey = k;
-                    UI.showToast("阿之已连接大脑", "success");
-                    App.nav('ai');
-                    AI.appendMsg("azhi", "大脑已连接。我现在可以看到市场的一切。");
+                const k = document.getElementById('settingKey').value.trim();
+                localStorage.setItem('azhi_key', k);
+                alert("保存成功");
+                location.reload();
+            },
+
+            startTime() { setInterval(() => document.getElementById('clock').innerText = dayjs().format('HH:mm:ss'), 1000); },
+            
+            initChart() {
+                this.chart = echarts.init(document.getElementById('klineChart'));
+                this.loadKLine('1.000001', '上证指数');
+                window.onresize = () => this.chart.resize();
+            },
+            
+            async loadKLine(secid, name) {
+                document.getElementById('chartName').innerText = name;
+                const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1&fields2=f51,f52,f53,f54,f55&klt=101&fqt=1&end=20500101&lmt=60`;
+                const res = await Ninja.fetchStock(url);
+                if(res?.data?.klines) {
+                    const d = res.data.klines.map(i => i.split(','));
+                    this.chart.setOption({
+                        backgroundColor: 'transparent',
+                        grid: { left: 0, right: 0, top: 5, bottom: 0 },
+                        xAxis: { show: false, data: d.map(i=>i[0]) },
+                        yAxis: { show: false, scale: true },
+                        series: [{
+                            type: 'candlestick',
+                            data: d.map(i=>[+i[1], +i[2], +i[3], +i[4]]),
+                            itemStyle: { color: '#FF453A', color0: '#30D158', borderColor: '#FF453A', borderColor0: '#30D158' }
+                        }]
+                    });
                 }
             }
         };
 
-        // 启动系统
-        window.onload = () => AzhiOS.boot();
-        window.onresize = () => UI.chart && UI.chart.resize();
+        const AI = {
+            async analyze(mode) {
+                const key = localStorage.getItem('azhi_key');
+                if(!key) return App.nav('settings');
+                
+                const assets = App.assets.filter(a => a.mode === mode);
+                const data = assets.map(a => {
+                    const isFund = a.type === 'fund';
+                    const d = isFund ? App.fundCache[a.code] : App.cache[a.code];
+                    const price = isFund ? (d?.gsz||0) : (d?.f2||0);
+                    const name = isFund ? (d?.name||a.code) : (d?.f14||a.code);
+                    return `${name}(${isFund?'基金':'股票'}):现价${price}`;
+                }).join(';');
+
+                this.reply("正在运算...", true);
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                        method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ contents: [{ parts: [{ text: `你叫阿之。请简短点评用户资产: ${data}` }] }] })
+                    });
+                    const json = await res.json();
+                    this.removeLoading();
+                    this.reply(json.candidates[0].content.parts[0].text);
+                } catch(e) { this.removeLoading(); this.reply("AI 掉线了"); }
+            },
+            reply(t, l=false) {
+                const b = document.getElementById('chatBox');
+                b.innerHTML += `<div class="bg-[#222] p-3 rounded-r-xl rounded-bl-xl text-xs text-gray-300 max-w-[90%] mb-2 border border-[#333]">${l?'...':marked.parse(t)}</div>`;
+                b.scrollTop = b.scrollHeight;
+            },
+            removeLoading() { const l=document.getElementById('chatBox').lastElementChild; if(l&&l.innerHTML.includes('...')) l.remove(); },
+            clear() { document.getElementById('chatBox').innerHTML = ''; },
+            send() { this.analyze('holding'); }
+        };
+
+        window.onload = () => App.init();
     </script>
 </body>
 </html>
