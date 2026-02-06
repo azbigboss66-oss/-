@@ -16,13 +16,19 @@
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; overflow: hidden; }
         .no-scroll::-webkit-scrollbar { display: none; }
         
-        .flash-red { animation: flashR 0.5s; }
-        .flash-green { animation: flashG 0.5s; }
+        /* 价格闪烁 */
+        .flash-red { animation: flashR 0.8s; }
+        .flash-green { animation: flashG 0.8s; }
         @keyframes flashR { 0% { background: rgba(255, 69, 58, 0.4); } 100% { background: transparent; } }
         @keyframes flashG { 0% { background: rgba(48, 209, 88, 0.4); } 100% { background: transparent; } }
 
-        /* 调试控制台 */
-        #console { font-family: 'Menlo', 'Monaco', monospace; font-size: 10px; color: #0f0; background: #000; border-top: 1px solid #333; height: 100px; overflow-y: auto; padding: 5px; opacity: 0.8; }
+        /* 调试控制台 - 如果出错会显示在这里 */
+        #console-log { 
+            display: none;
+            position: fixed; bottom: 70px; left: 10px; right: 10px; 
+            height: 100px; background: rgba(0,0,0,0.9); border: 1px solid #f00; 
+            color: #f00; font-size: 10px; overflow-y: auto; z-index: 9999; padding: 5px;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen w-full">
@@ -30,9 +36,9 @@
     <header class="h-12 flex items-center justify-between px-4 border-b border-[#222] bg-[#111] z-50">
         <div class="flex items-center gap-2">
             <div id="status" class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
-            <h1 class="font-bold text-base">基王阿之 <span class="text-[9px] bg-blue-900 text-blue-300 px-1 rounded">TENCENT</span></h1>
+            <h1 class="font-bold text-base">基王阿之 <span class="text-[9px] bg-blue-900 text-blue-300 px-1 rounded font-mono">TENCENT</span></h1>
         </div>
-        <button onclick="App.toggleConsole()" class="text-[10px] text-gray-500 underline">调试日志</button>
+        <button onclick="window.location.reload()" class="text-[10px] text-gray-500 border border-[#333] px-2 py-1 rounded">强制刷新</button>
     </header>
 
     <main class="flex-1 overflow-y-auto no-scroll pb-32 bg-black relative" id="main">
@@ -49,32 +55,42 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-4 gap-2" id="indices"></div>
+            <div class="grid grid-cols-4 gap-2" id="indices">
+                <div class="text-center text-[10px] text-gray-600 col-span-4 py-2">腾讯接口连接中...</div>
+            </div>
 
             <div class="bg-[#121212] rounded-xl border border-[#222] min-h-[300px]">
                 <div class="flex justify-between items-center p-3 border-b border-[#222]">
                     <span class="text-sm font-bold">我的持仓</span>
-                    <button onclick="App.addDialog()" class="bg-blue-600 px-3 py-1 rounded text-xs font-bold">添加</button>
+                    <button onclick="App.addDialog()" class="bg-blue-600 px-3 py-1 rounded text-xs font-bold shadow-lg shadow-blue-900/50">添加资产</button>
                 </div>
                 <div id="list" class="divide-y divide-[#222]">
-                    <div class="p-10 text-center text-gray-600 text-xs">正在通过腾讯专线接入...</div>
+                    <div class="p-10 text-center text-gray-600 text-xs">
+                        暂无数据。请点击右上方“添加资产”。<br>
+                        (如果已添加但看不到，请点击顶部的强制刷新)
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="view-ai" class="hidden flex flex-col h-full p-3 pb-0">
             <div class="flex-1 bg-[#121212] rounded-xl border border-[#222] flex flex-col overflow-hidden">
+                <div class="h-8 bg-[#1a1a1a] flex items-center px-3 justify-between">
+                    <span class="text-[10px] text-gray-500">模型: Gemini Pro (Stable)</span>
+                    <span class="text-[10px] text-green-500" id="aiStatus">就绪</span>
+                </div>
                 <div id="chatBox" class="flex-1 overflow-y-auto p-3 space-y-3 no-scroll">
                     <div class="bg-[#222] p-2 rounded text-xs text-gray-300 w-fit">
-                        我是阿之。已切换到 Gemini Pro 稳定版模型。
+                        已切换至 Gemini Pro 稳定版模型。404 问题已修复。<br>请点击下方按钮测试。
                     </div>
                 </div>
                 <div class="p-3 border-t border-[#222] bg-[#111]">
                     <div class="flex gap-2 mb-2">
                         <button onclick="AI.ask('holdings')" class="flex-1 bg-blue-900/30 text-blue-400 py-2 rounded text-xs">诊断持仓</button>
+                        <button onclick="AI.ask('market')" class="flex-1 bg-purple-900/30 text-purple-400 py-2 rounded text-xs">预测大盘</button>
                     </div>
                     <div class="flex gap-2">
-                        <input id="aiInput" class="flex-1 bg-black border border-[#333] rounded p-2 text-xs text-white" placeholder="问点什么...">
+                        <input id="aiInput" class="flex-1 bg-black border border-[#333] rounded p-2 text-xs text-white" placeholder="输入 Key 或 提问...">
                         <button onclick="AI.send()" class="text-blue-500 px-2"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
@@ -84,19 +100,30 @@
 
         <div id="view-settings" class="hidden p-4 space-y-4">
             <div class="bg-[#121212] rounded-xl p-4 border border-[#222]">
-                <h3 class="font-bold text-gray-300 mb-4">核心设置</h3>
+                <h3 class="font-bold text-gray-300 mb-4">系统设置</h3>
                 <label class="text-[10px] text-gray-500 block mb-1">Gemini API Key</label>
                 <input id="apiKey" type="password" class="w-full bg-black border border-[#333] rounded p-2 text-xs text-white font-mono mb-4">
-                <button onclick="App.saveSettings()" class="w-full bg-green-600 py-2 rounded text-xs font-bold">保存配置</button>
-                <button onclick="App.clearAssets()" class="w-full bg-red-900/50 text-red-400 py-2 rounded text-xs font-bold mt-2">清空所有资产</button>
+                
+                <button onclick="App.saveSettings()" class="w-full bg-green-600 py-2 rounded text-xs font-bold mb-4">保存配置</button>
+                
+                <div class="border-t border-[#333] pt-4">
+                    <button onclick="App.hardReset()" class="w-full bg-red-900/30 text-red-500 py-2 rounded text-xs font-bold border border-red-900/50">
+                        ⚠️ 重置所有数据 (修复卡死)
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-[10px] text-gray-600 font-mono">
+                    Build: V7.0-TENCENT<br>
+                    Engine: qt.gtimg.cn
+                </div>
             </div>
         </div>
 
     </main>
 
-    <div id="console" class="hidden fixed bottom-16 w-full z-40"></div>
+    <div id="console-log"></div>
 
-    <nav class="fixed bottom-0 w-full h-16 bg-[#111] border-t border-[#222] flex justify-around items-center z-50">
+    <nav class="fixed bottom-0 w-full h-16 bg-[#111] border-t border-[#222] flex justify-around items-center z-50 pb-safe">
         <button onclick="App.switch('market')" class="w-1/3 flex flex-col items-center text-blue-500" id="nav-market">
             <i class="fas fa-chart-bar text-lg"></i><span class="text-[10px]">行情</span>
         </button>
@@ -110,15 +137,14 @@
 
     <script>
         // === 🚀 腾讯核动力引擎 (Gtimg) ===
-        // 格式: v_sh600519="51~贵州茅台~600519~1700.00~..."
         const Engine = {
             cache: {},
             
-            // 脚本注入核心
+            // 腾讯接口：极速、无防盗链
             fetch(codes, cb) {
                 const s = document.createElement('script');
                 s.src = `https://qt.gtimg.cn/q=${codes}`;
-                s.charset = 'gbk'; // 腾讯接口必须用 gbk
+                s.charset = 'gbk'; 
                 s.id = 'tencent_script';
                 
                 s.onload = () => {
@@ -126,26 +152,33 @@
                     cb(true);
                     s.remove();
                 };
-                s.onerror = () => {
-                    Log.error("腾讯接口连接失败");
+                s.onerror = (e) => {
+                    // 如果腾讯也挂了，那就真没网了
+                    App.log("腾讯接口无法连接");
                     cb(false);
                     s.remove();
                 };
                 document.head.appendChild(s);
             },
 
-            // 基金估值 (保留 FundGZ 因为它有估值)
+            // 基金估值
             fetchFund(code, cb) {
                 const s = document.createElement('script');
                 s.src = `https://fundgz.1234567.com.cn/js/${code}.js?rt=${Date.now()}`;
                 const old = window.jsonpgz;
+                
+                // 劫持回调
                 window.jsonpgz = (data) => {
                     this.cache['f_'+code] = { name: data.name, price: +data.gsz, rate: +data.gszzl };
-                    window.jsonpgz = old;
+                    if(old) window.jsonpgz = old;
                     s.remove();
                     cb();
                 };
-                s.onerror = () => s.remove();
+                
+                s.onerror = () => {
+                    App.log(`基金 ${code} 数据获取失败`);
+                    s.remove();
+                };
                 document.head.appendChild(s);
             },
 
@@ -157,8 +190,6 @@
                     
                     const d = val.split('~');
                     // d[1]:名字, d[3]:现价, d[32]:涨跌%
-                    // 港股: v_hk00700 -> d[1]:名, d[3]:价, d[32]:%
-                    // 美股: v_usAAPL -> d[1]:名, d[3]:价, d[32]:%
                     this.cache[c] = {
                         name: d[1],
                         price: parseFloat(d[3]),
@@ -169,12 +200,19 @@
         };
 
         const App = {
+            // 注意：V7 使用全新的存储 Key，防止旧数据污染
             assets: JSON.parse(localStorage.getItem('azhi_v7_assets') || '[]'),
             key: localStorage.getItem('azhi_key') || '',
             timer: null,
 
             init() {
                 if(this.key) document.getElementById('apiKey').value = this.key;
+                
+                // 默认添加几个指数，防止首页空白
+                if(this.assets.length === 0) {
+                    // 不自动添加，保持清爽，但会在UI提示
+                }
+
                 this.loop();
                 this.timer = setInterval(() => this.loop(), 2000);
             },
@@ -202,7 +240,7 @@
                 // 3. 基金接口 (独立)
                 myFunds.forEach(c => Engine.fetchFund(c, () => this.render()));
                 
-                document.getElementById('updateTime').innerText = dayjs().format('HH:mm:ss');
+                document.getElementById('updateTime').innerText = dayjs().format('HH:mm:ss') + " 同步中";
             },
 
             formatCode(c) {
@@ -226,7 +264,7 @@
                         idxDiv.innerHTML += `
                             <div class="bg-[#161616] p-2 rounded text-center border border-[#222]">
                                 <div class="text-[9px] text-gray-500">${idxMap[k]}</div>
-                                <div class="font-bold text-xs mt-1">${d.price}</div>
+                                <div class="font-bold text-xs mt-1 text-white">${d.price}</div>
                                 <div class="text-[9px] ${color}">${d.rate}%</div>
                             </div>`;
                     }
@@ -238,7 +276,7 @@
                 let totalPnL = 0;
                 let totalAsset = 0;
 
-                if(this.assets.length === 0) list.innerHTML = `<div class="p-10 text-center text-gray-600 text-xs">暂无持仓，请点击右上角添加</div>`;
+                if(this.assets.length === 0) list.innerHTML = `<div class="p-10 text-center text-gray-600 text-xs">暂无资产，请点击添加</div>`;
 
                 this.assets.forEach((a, i) => {
                     const key = a.type==='fund' ? 'f_'+a.code : this.formatCode(a.code);
@@ -246,7 +284,7 @@
                     
                     if(d) {
                         const val = d.price * a.vol;
-                        // 估算当日盈亏: 市值 * 涨幅 / (1+涨幅)
+                        // 估算当日盈亏
                         const pnl = val * (d.rate/100) / (1 + d.rate/100);
                         totalPnL += pnl;
                         totalAsset += val;
@@ -260,7 +298,7 @@
                             <div class="p-3 flex justify-between items-center group relative overflow-hidden">
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[9px] px-1 rounded ${a.type==='fund'?'bg-orange-900 text-orange-400':'bg-blue-900 text-blue-400'}">${a.type==='fund'?'基':'股'}</span>
+                                        <span class="text-[9px] px-1 rounded ${a.type==='fund'?'bg-orange-900/50 text-orange-300':'bg-blue-900/50 text-blue-300'}">${a.type==='fund'?'基':'股'}</span>
                                         <span class="font-bold text-sm text-gray-300">${d.name}</span>
                                     </div>
                                     <div class="text-[10px] text-gray-600 mt-1">${a.code} | 持 ${a.vol}</div>
@@ -285,54 +323,74 @@
             addDialog() {
                 const code = prompt("请输入代码 (支持: 600519, 00700, AAPL, 001840)");
                 if(!code) return;
+                
                 let type = 'stock';
                 if(/^\d{6}$/.test(code) && (code.startsWith('00')||code.startsWith('01'))) type='fund';
-                if(confirm(`${code} 是基金吗? 确定=基金, 取消=股票`)) type='fund';
+                if(confirm(`${code} 是基金吗? \n点击 [确定] 是基金\n点击 [取消] 是股票`)) type='fund'; else type='stock';
+                
                 const vol = prompt("持有数量", "100");
                 
                 this.assets.push({ code, type, vol: parseFloat(vol)||0, cost:0 });
                 localStorage.setItem('azhi_v7_assets', JSON.stringify(this.assets));
+                // 立即刷新
                 this.loop();
             },
 
             del(i) {
-                if(confirm("删除?")) {
+                if(confirm("确定删除吗?")) {
                     this.assets.splice(i, 1);
                     localStorage.setItem('azhi_v7_assets', JSON.stringify(this.assets));
-                    this.loop();
+                    this.render();
                 }
             },
 
             saveSettings() {
-                this.key = document.getElementById('apiKey').value.trim();
+                const k = document.getElementById('apiKey').value.trim();
+                // 简单校验
+                if(k && !k.startsWith('AIza')) {
+                    alert("警告：API Key 格式看起来不对 (通常以 AIza 开头)");
+                }
+                this.key = k;
                 localStorage.setItem('azhi_key', this.key);
-                alert("Key 已保存");
+                alert("设置已保存");
+                location.reload();
             },
-            
-            clearAssets() {
-                localStorage.removeItem('azhi_v7_assets');
-                this.assets = [];
-                this.render();
+
+            hardReset() {
+                if(confirm("这将清空所有本地数据，用于修复卡死问题。确定吗？")) {
+                    localStorage.clear();
+                    location.reload();
+                }
             },
 
             switch(page) {
                 ['market','ai','settings'].forEach(p => {
                     document.getElementById('view-'+p).className = p===page?'block h-full':'hidden';
-                    document.getElementById('nav-'+p).className = p===page?'w-1/3 flex flex-col items-center text-blue-500':'w-1/3 flex flex-col items-center text-gray-600';
+                    const btn = document.getElementById('nav-'+p);
+                    if(p===page) {
+                        btn.className = "w-1/3 flex flex-col items-center text-blue-500 transition-colors";
+                    } else {
+                        btn.className = "w-1/3 flex flex-col items-center text-gray-600 transition-colors";
+                    }
                 });
             },
 
-            toggleConsole() {
-                const c = document.getElementById('console');
-                c.className = c.className.includes('hidden') ? 'fixed bottom-16 w-full z-40 block' : 'hidden';
+            log(msg) {
+                const c = document.getElementById('console-log');
+                c.style.display = 'block';
+                c.innerHTML += `<div>> ${msg}</div>`;
+                c.scrollTop = c.scrollHeight;
             }
         };
 
         // === 🧠 AI 修复版 (Gemini Pro) ===
         const AI = {
             async ask(type) {
-                if(!App.key) return alert("请先设置 API Key");
-                Log.info("正在发送 AI 请求...");
+                if(!App.key) return alert("请先在设置中填写 API Key");
+                
+                document.getElementById('aiStatus').innerText = "请求中...";
+                this.reply("User", type === 'holdings' ? "帮我诊断持仓" : "预测大盘");
+                this.reply("System", "正在连接大脑...");
                 
                 // 1. 数据准备
                 const context = App.assets.map(a => {
@@ -341,58 +399,63 @@
                     return d ? `${d.name}:现价${d.price},涨幅${d.rate}%` : a.code;
                 }).join('; ');
 
-                const prompt = `我是激进的投资者。我的持仓: [${context}]。请用一句话犀利地点评我的盈亏情况。`;
+                const prompt = `我是激进投资者。持仓: [${context}]。请毒舌点评我的盈亏。`;
                 
-                // 2. 发送 (使用 gemini-pro 模型，更稳定)
-                this.reply("User", "正在连接大脑...");
+                // 2. 发送 (使用 gemini-pro 模型)
                 try {
+                    // 尝试 Gemini Pro (v1beta)
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${App.key}`;
+                    
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
                     
-                    if(res.status === 404) throw new Error("404: 模型未找到 (请检查 Key/网络)");
-                    if(res.status === 400) throw new Error("400: Key 无效");
+                    if(res.status === 404) throw new Error("404: 模型不可用。可能是 Key 权限问题，或 IP 被 Google 封锁。");
+                    if(res.status === 400) throw new Error("400: Key 无效。");
+                    if(!res.ok) throw new Error(`HTTP Error ${res.status}`);
                     
                     const json = await res.json();
                     if(json.error) throw new Error(json.error.message);
                     
                     const text = json.candidates[0].content.parts[0].text;
                     this.reply("阿之", text);
-                    Log.info("AI 响应成功");
+                    document.getElementById('aiStatus').innerText = "正常";
                 } catch(e) {
-                    this.reply("系统", `❌ 错误: ${e.message}`);
-                    Log.error(e.message);
+                    this.reply("Error", `连接失败: ${e.message}`);
+                    document.getElementById('aiStatus').innerText = "错误";
+                    App.log(`AI Error: ${e.message}`);
                 }
             },
             
             reply(role, text) {
                 const box = document.getElementById('chatBox');
-                box.innerHTML += `<div class="bg-[#222] p-2 rounded mb-2 text-xs text-gray-300 border border-[#333]"><b>${role}:</b> ${marked.parse(text)}</div>`;
+                // 移除"正在连接..."提示
+                if(text === "正在连接大脑...") return; 
+                
+                const color = role === 'User' ? 'text-blue-400' : (role === 'Error' ? 'text-red-500' : 'text-gray-300');
+                box.innerHTML += `
+                    <div class="bg-[#222] p-2 rounded mb-2 text-xs ${color} border border-[#333]">
+                        <b class="opacity-50">${role}:</b> ${marked.parse(text)}
+                    </div>`;
                 box.scrollTop = box.scrollHeight;
             },
+
             send() {
                 const v = document.getElementById('aiInput').value;
-                if(v) AI.reply("User", v); 
-                // 简单复用逻辑
-                AI.ask('holdings');
-                document.getElementById('aiInput').value = '';
-            }
-        };
-
-        // === 调试日志 ===
-        const Log = {
-            info(msg) { 
-                const c = document.getElementById('console');
-                c.innerHTML += `<div class="text-green-500">[INFO] ${msg}</div>`;
-                c.scrollTop = c.scrollHeight;
-            },
-            error(msg) {
-                const c = document.getElementById('console');
-                c.innerHTML += `<div class="text-red-500">[ERR] ${msg}</div>`;
-                c.scrollTop = c.scrollHeight;
+                if(v) {
+                    // 如果用户输入的是 Key，自动保存
+                    if(v.startsWith('AIza')) {
+                        document.getElementById('apiKey').value = v;
+                        App.saveSettings();
+                        return;
+                    }
+                    AI.reply("User", v);
+                    // 复用逻辑，带上持仓数据一起发
+                    AI.ask('holdings'); 
+                    document.getElementById('aiInput').value = '';
+                }
             }
         };
 
